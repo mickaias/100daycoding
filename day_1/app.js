@@ -1,44 +1,68 @@
 const characterId = document.getElementById("characterId");
 const btnGo = document.getElementById("btn-go");
+const btnReset = document.getElementById("btn-reset");
 const content = document.getElementById("content");
 const image = document.getElementById("img");
+const containerResult = document.getElementById("result-style");
 
 const fetchApi = (value) => {
   const result = fetch(`https://rickandmortyapi.com/api/character/${value}`)
     .then((res) => res.json())
     .then((data) => {
-      console.log(data);
+      console.log(data)
       return data;
     });
   return result;
 };
 
-const keys = [
-  "name",
-  "status",
-  "species",
-  "gender",
-  "origin",
-  "image",
-  "episode",
-];
+const keys = ["name", "status", "species", "gender", "location", "episode"];
+const newKeys = {
+  name: "Nome",
+  status: 'Status',
+  species: 'Espécie',
+  gender: 'Genero',
+  location: 'Planeta de Origin',
+  episode: 'Episodios'
+}
 
 const buildResult = (result) => {
-  const newObject = {};
-  keys
+  return keys
     .map((key) => document.getElementById(key))
     .map((elem) => {
-      elem.checked && (newObject[elem.name] = result[elem.name]);
+      if (elem.checked === true && Array.isArray(result[elem.name]) === true) {
+        const arrayResult = result[elem.name].join("\r\n");
+        console.log(arrayResult);
+        const newElem = document.createElement("p");
+        newElem.innerHTML = `${newKeys[elem.name]} : ${result[elem.name]}`;
+        content.appendChild(newElem);
+      } else if (elem.checked === true && (elem.name === 'location')) {
+        const newElem = document.createElement("p");
+        newElem.innerHTML = `${newKeys[elem.name]}: ${result[elem.name].name}`;
+        content.appendChild(newElem);
+      } else if (elem.checked === true && typeof result[elem.name] !== "object") {
+        const newElem = document.createElement("p");
+        newElem.innerHTML = `${newKeys[elem.name]} : ${result[elem.name]}`;
+        content.appendChild(newElem);
+      }
     });
-
-  return newObject();
 };
 
 btnGo.addEventListener("click", async (event) => {
   event.preventDefault();
+
+  if (characterId.value === "") {
+    return (content.innerHTML = "É necessário fazer um filtro.");
+  }
+
   const result = await fetchApi(characterId.value);
-  // content.textContent = `${JSON.stringify(result, undefined, 2)}`;
-  content.textContent = `${JSON.stringify(buildResult, undefined, 2)}`;
-  console.log(buildResult(result));
-  image.src = `${result.image}`;
+  if (content.firstChild === null) {
+    containerResult.className = "result-style";
+    image.src = `${result.image}`;
+    buildResult(result);
+  } else {
+    content.innerHTML = "";
+    containerResult.className = "result-style";
+    image.src = `${result.image}`;
+    buildResult(result);
+  }
 });
